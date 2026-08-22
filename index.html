@@ -22,6 +22,14 @@
     .back-btn { background: none; border: none; color: #1a73e8; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 4px; }
     .current-mode-title { font-weight: bold; color: #3c4043; font-size: 15px; }
 
+    /* Thanh nhảy câu hỏi ôn luyện ở đầu trang */
+    .jump-bar { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-bottom: 14px; background: #f1f3f4; padding: 8px 12px; border-radius: 8px; }
+    .jump-bar label { font-size: 14px; font-weight: bold; color: #3c4043; }
+    .jump-input { width: 70px; padding: 6px 8px; font-size: 14px; border: 1px solid #dadce0; border-radius: 4px; text-align: center; outline: none; }
+    .jump-input:focus { border-color: #1a73e8; }
+    .jump-btn { padding: 6px 12px; background: #1a73e8; color: #fff; font-size: 14px; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; }
+    .jump-btn:hover { background: #1557b0; }
+
     /* Bảng điểm tổng kết (Thi thử) */
     .score-board { background: #e8f0fe; padding: 16px; border-radius: 8px; text-align: center; margin-bottom: 20px; border: 1px solid #aecbfa; }
     .score-title { font-size: 20px; font-weight: bold; color: #174ea6; margin-bottom: 6px; }
@@ -81,8 +89,15 @@
   <div id="quizScreen" style="display: none;">
     <!-- Thanh điều hướng trên cùng -->
     <div class="top-bar">
-      <button class="back-btn" onclick="goHome()">❮ Màn hình chính</button>
+      <button class="back-btn" onclick="goHome()">❮ TRANG CHỦ</button>
       <span id="modeTitle" class="current-mode-title">THI THỬ</span>
+    </div>
+
+    <!-- Thanh nhảy đến câu (Chỉ dùng cho Ôn luyện, đặt ở đầu trang) -->
+    <div id="jumpBar" class="jump-bar" style="display: none;">
+      <label for="jumpInput">Câu bắt đầu:</label>
+      <input type="number" id="jumpInput" class="jump-input" placeholder="1-150" min="1" max="150" onkeydown="if(event.key==='Enter') jumpToQuestion()">
+      <button class="jump-btn" onclick="jumpToQuestion()">OK</button>
     </div>
 
     <!-- Bảng tổng kết điểm (Chỉ dùng cho Thi thử) -->
@@ -123,7 +138,7 @@
   // Biến trạng thái chế độ Ôn luyện
   let practiceQuestions = [];
   let practiceAnswers = {};
-  let currentPracticePage = 0;
+  let currentPracticeStartIndex = 0; // Chỉ số index (0-based) của câu hỏi bắt đầu hiển thị trên cùng
   const questionsPerPage = 3;
 
   // Hàm trộn mảng Fisher-Yates Shuffle
@@ -192,12 +207,18 @@
       document.getElementById('scoreBoard').style.display = isSubmitted ? 'block' : 'none';
       document.getElementById('submitBtn').style.display = 'block';
       document.getElementById('navControls').style.display = 'none';
+      document.getElementById('jumpBar').style.display = 'none';
       renderQuiz();
     } else {
       document.getElementById('modeTitle').innerText = 'CHẾ ĐỘ: ÔN LUYỆN';
       document.getElementById('scoreBoard').style.display = 'none';
       document.getElementById('submitBtn').style.display = 'none';
       document.getElementById('navControls').style.display = 'flex';
+      document.getElementById('jumpBar').style.display = 'flex';
+      
+      // Mặc định tự động nhảy về câu 1 khi mới bắt đầu vào ôn luyện
+      currentPracticeStartIndex = 0;
+      document.getElementById('jumpInput').value = '';
       renderPractice();
     }
   }
@@ -384,8 +405,7 @@
     container.className = '';
     container.innerHTML = '';
 
-    const totalPages = Math.ceil(practiceQuestions.length / questionsPerPage);
-    const startIndex = currentPracticePage * questionsPerPage;
+    const startIndex = currentPracticeStartIndex;
     const currentQuestions = practiceQuestions.slice(startIndex, startIndex + questionsPerPage);
 
     currentQuestions.forEach((q) => {
@@ -435,13 +455,14 @@
       container.appendChild(card);
     });
 
-    document.getElementById('prevBtn').disabled = currentPracticePage === 0;
-    document.getElementById('nextBtn').disabled = currentPracticePage >= totalPages - 1;
+    // Cập nhật trạng thái các nút lùi/tiến
+    document.getElementById('prevBtn').disabled = currentPracticeStartIndex === 0;
+    document.getElementById('nextBtn').disabled = currentPracticeStartIndex + questionsPerPage >= practiceQuestions.length;
     
-    // Cập nhật text hiển thị thành dạng: Câu 4 - 6
+    // Cập nhật text hiển thị số câu
     const startNum = startIndex + 1;
     const endNum = Math.min(startIndex + questionsPerPage, practiceQuestions.length);
-    document.getElementById('pageInfo').innerText = `Câu ${startNum} - ${endNum}`;
+    document.getElementById('pageInfo').innerText = startNum === endNum ? `Câu ${startNum}` : `Câu ${startNum} - ${endNum}`;
   }
 
   function selectPracticeOption(qId, optionIdx) {
@@ -449,8 +470,43 @@
     renderPractice();
   }
 
-  function changePracticePage(delta) {
-    currentPracticePage += delta;
+  function changePracticePage(direction) {
+    // direction = -1 (lùi 3 câu) hoặc 1 (tiến 3 câu)
+    let newStartIndex = currentPracticeStartIndex + (direction * questionsPerPage);
+    
+    if (newStartIndex < 0) {
+      newStartIndex = 0;
+    } else if (newStartIndex >= practiceQuestions.length) {
+      newStartIndex = practiceQuestions.length - 1;
+    }
+
+    currentPracticeStartIndex = newStartIndex;
+    renderPractice();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Hàm nhảy trực tiếp đến câu hỏi chỉ định (Câu X luôn đứng đầu tiên)
+  function jumpToQuestion() {
+    const rawVal = document.getElementById('jumpInput').value.trim();
+
+    // Trường hợp 1: Nếu để ô trống -> tự động về câu 1 làm câu đầu tiên
+    if (rawVal === '') {
+      currentPracticeStartIndex = 0;
+      renderPractice();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    const targetNum = Number(rawVal);
+    const maxQuestions = practiceQuestions.length || 150;
+
+    // Trường hợp 2: Giá trị không hợp lệ (không phải số nguyên, < 1, hoặc > max) -> Không đổi giao diện
+    if (!Number.isInteger(targetNum) || targetNum < 1 || targetNum > maxQuestions) {
+      return;
+    }
+
+    // Trường hợp 3: Đặt chỉ số bắt đầu chính xác bằng (targetNum - 1) để câu targetNum hiển thị đầu tiên
+    currentPracticeStartIndex = targetNum - 1;
     renderPractice();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
