@@ -256,6 +256,9 @@
       // Xáo trộn lại đề mới hoàn toàn cho lần làm lại tiếp theo
       prepareAndShuffleQuiz();
       renderQuiz();
+      
+      // Đã thêm lệnh tự động cuộn lên đầu trang khi làm lại bài thi
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
 </script>
