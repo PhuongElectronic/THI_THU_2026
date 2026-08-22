@@ -3,14 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Thi Thử Trắc Nghiệm</title>
+  <title>Thi Thử & Ôn Luyện Trắc Nghiệm</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background-color: #f4f6f9; color: #333; padding: 12px; }
     .container { max-width: 650px; margin: 0 auto; background: #fff; padding: 16px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
     h1 { text-align: center; font-size: 20px; color: #1a73e8; margin-bottom: 16px; text-transform: uppercase; }
     
-    /* Bảng điểm tổng kết */
+    /* Giao diện Trang chủ (Menu chính) */
+    .home-menu { display: flex; flex-direction: column; gap: 16px; padding: 10px 0; }
+    .mode-card { background: #f8f9fa; border: 2px solid #e0e0e0; border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s ease; }
+    .mode-card:hover { border-color: #1a73e8; background: #e8f0fe; transform: translateY(-2px); }
+    .mode-card h2 { font-size: 18px; color: #1a73e8; margin-bottom: 8px; }
+    .mode-card p { font-size: 13px; color: #5f6368; line-height: 1.4; }
+
+    /* Thanh điều hướng quay lại trang chủ */
+    .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+    .back-btn { background: none; border: none; color: #1a73e8; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+    .current-mode-title { font-weight: bold; color: #3c4043; font-size: 15px; }
+
+    /* Bảng điểm tổng kết (Thi thử) */
     .score-board { background: #e8f0fe; padding: 16px; border-radius: 8px; text-align: center; margin-bottom: 20px; border: 1px solid #aecbfa; }
     .score-title { font-size: 20px; font-weight: bold; color: #174ea6; margin-bottom: 6px; }
     .score-detail { font-size: 14px; color: #3c4043; display: flex; justify-content: space-around; margin-top: 10px; }
@@ -28,44 +40,91 @@
     .option { display: block; width: 100%; text-align: left; padding: 12px; margin-bottom: 8px; border: 1px solid #dadce0; border-radius: 6px; background: #fff; font-size: 14px; cursor: pointer; }
     .option.selected { border-color: #1a73e8; background-color: #e8f0fe; font-weight: bold; color: #174ea6; }
     
-    /* Trạng thái sau nộp bài */
+    /* Trạng thái sau nộp bài / Ôn luyện */
     .option.correct-ans { border-color: #34a853; background-color: #e6f4ea; color: #137333; font-weight: bold; }
     .option.incorrect-ans { border-color: #ea4335; background-color: #fce8e6; color: #c5221f; font-weight: bold; }
     
-    /* Hiển thị ghi chú câu sai */
+    /* Hiển thị ghi chú câu sai/đúng */
     .wrong-notice { background: #fce8e6; border-left: 4px solid #ea4335; padding: 8px 12px; color: #c5221f; font-size: 13px; font-weight: bold; margin-top: 10px; border-radius: 0 4px 4px 0; }
+    .correct-notice { background: #e6f4ea; border-left: 4px solid #34a853; padding: 8px 12px; color: #137333; font-size: 13px; font-weight: bold; margin-top: 10px; border-radius: 0 4px 4px 0; }
     
     /* Nút bấm hành động */
     .submit-btn { display: block; width: 100%; padding: 14px; background: #1a73e8; color: #fff; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px; }
     .loading { text-align: center; padding: 30px; font-size: 15px; color: #666; }
+
+    /* Điều hướng ôn luyện */
+    .nav-controls { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; gap: 10px; }
+    .nav-btn { flex: 1; padding: 12px; background: #1a73e8; color: #fff; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; font-size: 18px; }
+    .nav-btn:disabled { background: #ccc; cursor: not-allowed; }
+    .page-info { font-size: 15px; font-weight: bold; color: #555; white-space: nowrap; }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <h1>THI THỬ TRẮC NGHIỆM</h1>
+  <h1>TRẮC NGHIỆM ONLINE</h1>
 
-  <!-- Bảng tổng kết điểm -->
-  <div id="scoreBoard" class="score-board" style="display: none;">
-    <div class="score-title" id="scoreText">KẾT QUẢ: 0 / 0 CÂU</div>
-    <div class="score-detail">
-      <div>Đúng: <span id="correctCount" class="text-correct">0</span> câu</div>
-      <div>Sai / Bỏ trống: <span id="wrongCount" class="text-wrong">0</span> câu</div>
-      <div>Tỷ lệ: <span id="percentText">0%</span></div>
+  <!-- 1. MÀN HÌNH TRANG CHỦ (MENU CHỌN CHẾ ĐỘ) -->
+  <div id="homeScreen" class="home-menu">
+    <div class="mode-card" onclick="selectMode('exam')">
+      <h2>📝 THI THỬ</h2>
+      <p>Trộn ngẫu nhiên câu hỏi & đáp án. Làm toàn bộ 150 câu và xem kết quả tổng quát sau khi nộp bài.</p>
+    </div>
+    
+    <div class="mode-card" onclick="selectMode('practice')">
+      <h2>📖 ÔN LUYỆN</h2>
+      <p>Giữ nguyên thứ tự câu hỏi (1-150). Báo ngay kết quả Đúng/Sai sau mỗi lựa chọn, hiển thị 2-3 câu/màn hình.</p>
     </div>
   </div>
 
-  <!-- Danh sách câu hỏi -->
-  <div id="quizContainer" class="loading">Đang nạp dữ liệu từ question.txt và key.txt...</div>
+  <!-- 2. MÀN HÌNH LÀM BÀI (ẨN MẶC ĐỊNH) -->
+  <div id="quizScreen" style="display: none;">
+    <!-- Thanh điều hướng trên cùng -->
+    <div class="top-bar">
+      <button class="back-btn" onclick="goHome()">❮ Màn hình chính</button>
+      <span id="modeTitle" class="current-mode-title">THI THỬ</span>
+    </div>
 
-  <button id="submitBtn" class="submit-btn" onclick="submitQuiz()" style="display: none;">NỘP BÀI</button>
+    <!-- Bảng tổng kết điểm (Chỉ dùng cho Thi thử) -->
+    <div id="scoreBoard" class="score-board" style="display: none;">
+      <div class="score-title" id="scoreText">KẾT QUẢ: 0 / 0 CÂU</div>
+      <div class="score-detail">
+        <div>Đúng: <span id="correctCount" class="text-correct">0</span> câu</div>
+        <div>Sai / Bỏ trống: <span id="wrongCount" class="text-wrong">0</span> câu</div>
+        <div>Tỷ lệ: <span id="percentText">0%</span></div>
+      </div>
+    </div>
+
+    <!-- Danh sách câu hỏi -->
+    <div id="quizContainer"></div>
+
+    <!-- Nút nộp bài (Thi thử) -->
+    <button id="submitBtn" class="submit-btn" onclick="submitQuiz()" style="display: none;">NỘP BÀI</button>
+
+    <!-- Thanh điều hướng câu hỏi (Ôn luyện) -->
+    <div id="navControls" class="nav-controls" style="display: none;">
+      <button id="prevBtn" class="nav-btn" onclick="changePracticePage(-1)">&lt;&lt;</button>
+      <span id="pageInfo" class="page-info">Câu 1 - 3</span>
+      <button id="nextBtn" class="nav-btn" onclick="changePracticePage(1)">&gt;&gt;</button>
+    </div>
+  </div>
 </div>
 
 <script>
-  let questions = [];
   let rawQuestions = []; // Lưu lại dữ liệu gốc đã đọc từ file
+  let isDataLoaded = false;
+  let currentMode = ''; 
+  
+  // Biến trạng thái chế độ Thi thử
+  let questions = [];
   let userAnswers = {};
   let isSubmitted = false;
+
+  // Biến trạng thái chế độ Ôn luyện
+  let practiceQuestions = [];
+  let practiceAnswers = {};
+  let currentPracticePage = 0;
+  const questionsPerPage = 3;
 
   // Hàm trộn mảng Fisher-Yates Shuffle
   function shuffleArray(array) {
@@ -77,33 +136,80 @@
     return arr;
   }
 
-  // Tải đồng thời 2 file question.txt và key.txt
-  Promise.all([
-    fetch('question.txt').then(res => {
-      if (!res.ok) throw new Error('Không tìm thấy file question.txt');
-      return res.text();
-    }),
-    fetch('key.txt').then(res => {
-      if (!res.ok) throw new Error('Không tìm thấy file key.txt');
-      return res.text();
-    })
-  ])
-  .then(([qText, kText]) => {
-    const keyMap = parseKeys(kText);
-    rawQuestions = parseQuestions(qText, keyMap);
-    prepareAndShuffleQuiz();
-    renderQuiz();
-    document.getElementById('submitBtn').style.display = 'block';
-  })
-  .catch(err => {
-    document.getElementById('quizContainer').innerHTML = `
-      <div style="color: #c5221f; text-align: center;">
-        <b>⚠️ Lỗi nạp dữ liệu:</b><br>${err.message}<br><br>
-        <i>Vui lòng kiểm tra tên file <b>question.txt</b> và <b>key.txt</b> trong thư mục!</i>
-      </div>`;
-  });
+  // Tải file dữ liệu khi người dùng chọn một chế độ bất kỳ
+  function loadDataAndStart(mode) {
+    const container = document.getElementById('quizContainer');
+    container.className = 'loading';
+    container.innerHTML = 'Đang nạp dữ liệu từ question.txt và key.txt...';
 
-  // Đọc file key.txt thành Map { 1: 'A', 2: 'B', ... }
+    Promise.all([
+      fetch('question.txt').then(res => {
+        if (!res.ok) throw new Error('Không tìm thấy file question.txt');
+        return res.text();
+      }),
+      fetch('key.txt').then(res => {
+        if (!res.ok) throw new Error('Không tìm thấy file key.txt');
+        return res.text();
+      })
+    ])
+    .then(([qText, kText]) => {
+      const keyMap = parseKeys(kText);
+      rawQuestions = parseQuestions(qText, keyMap);
+      isDataLoaded = true;
+
+      // Khởi tạo các tập dữ liệu
+      prepareAndShuffleQuiz();
+      preparePracticeQuestions();
+      
+      startMode(mode);
+    })
+    .catch(err => {
+      container.className = '';
+      container.innerHTML = `
+        <div style="color: #c5221f; text-align: center; padding: 20px;">
+          <b>⚠️ Lỗi nạp dữ liệu:</b><br>${err.message}<br><br>
+          <i>Vui lòng kiểm tra file <b>question.txt</b> và <b>key.txt</b> trong thư mục!</i>
+        </div>`;
+    });
+  }
+
+  // Chọn chế độ từ màn hình chính
+  function selectMode(mode) {
+    currentMode = mode;
+    document.getElementById('homeScreen').style.display = 'none';
+    document.getElementById('quizScreen').style.display = 'block';
+
+    if (!isDataLoaded) {
+      loadDataAndStart(mode);
+    } else {
+      startMode(mode);
+    }
+  }
+
+  function startMode(mode) {
+    if (mode === 'exam') {
+      document.getElementById('modeTitle').innerText = 'CHẾ ĐỘ: THI THỬ';
+      document.getElementById('scoreBoard').style.display = isSubmitted ? 'block' : 'none';
+      document.getElementById('submitBtn').style.display = 'block';
+      document.getElementById('navControls').style.display = 'none';
+      renderQuiz();
+    } else {
+      document.getElementById('modeTitle').innerText = 'CHẾ ĐỘ: ÔN LUYỆN';
+      document.getElementById('scoreBoard').style.display = 'none';
+      document.getElementById('submitBtn').style.display = 'none';
+      document.getElementById('navControls').style.display = 'flex';
+      renderPractice();
+    }
+  }
+
+  // Quay lại màn hình chính
+  function goHome() {
+    document.getElementById('quizScreen').style.display = 'none';
+    document.getElementById('homeScreen').style.display = 'flex';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Parse file key.txt
   function parseKeys(text) {
     const map = {};
     const lines = text.trim().split('\n');
@@ -116,7 +222,7 @@
     return map;
   }
 
-  // Đọc file question.txt và ghép đáp án
+  // Parse file question.txt
   function parseQuestions(text, keyMap) {
     const blocks = text.trim().split(/\n\s*\n/);
     const letterToIndex = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 };
@@ -138,23 +244,18 @@
     });
   }
 
-  // Chuẩn bị dữ liệu: Xáo trộn danh sách câu hỏi và xáo trộn các lựa chọn trong từng câu
+  /* ==================== CHẾ ĐỘ THI THỬ ==================== */
+
   function prepareAndShuffleQuiz() {
-    // 1. Đảo vị trí các câu hỏi
     const shuffledQ = shuffleArray(rawQuestions);
 
-    // 2. Đảo các đáp án trong từng câu hỏi mà vẫn giữ đúng chỉ số câu đúng
     questions = shuffledQ.map(q => {
-      // Tạo danh sách đối tượng chứa nội dung và cờ đánh dấu đáp án đúng
       const mappedOptions = q.options.map((optText, idx) => ({
         text: optText,
         isCorrect: idx === q.correctAnswer
       }));
 
-      // Xáo trộn mảng đáp án
       const shuffledOptions = shuffleArray(mappedOptions);
-
-      // Tìm vị trí mới của đáp án đúng
       const newCorrectIndex = shuffledOptions.findIndex(o => o.isCorrect);
 
       return {
@@ -166,7 +267,6 @@
     });
   }
 
-  // Hiển thị giao diện bài thi
   function renderQuiz() {
     const container = document.getElementById('quizContainer');
     container.className = '';
@@ -202,7 +302,6 @@
         </button>`;
       });
 
-      // Đánh dấu và ghi chú đáp án đúng cho các câu làm sai
       if (isWrong) {
         const userChoiceText = userAns !== undefined 
           ? `Bạn chọn: <b>${String.fromCharCode(65 + userAns)} (${q.options[userAns]})</b>` 
@@ -253,13 +352,107 @@
       document.getElementById('scoreBoard').style.display = 'none';
       document.getElementById('submitBtn').innerText = 'NỘP BÀI';
       
-      // Xáo trộn lại đề mới hoàn toàn cho lần làm lại tiếp theo
       prepareAndShuffleQuiz();
       renderQuiz();
-      
-      // Đã thêm lệnh tự động cuộn lên đầu trang khi làm lại bài thi
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+  }
+
+  /* ==================== CHẾ ĐỘ ÔN LUYỆN ==================== */
+
+  function preparePracticeQuestions() {
+    practiceQuestions = rawQuestions.map(q => {
+      const mappedOptions = q.options.map((optText, idx) => ({
+        text: optText,
+        isCorrect: idx === q.correctAnswer
+      }));
+
+      const shuffledOptions = shuffleArray(mappedOptions);
+      const newCorrectIndex = shuffledOptions.findIndex(o => o.isCorrect);
+
+      return {
+        id: q.id,
+        question: q.question,
+        options: shuffledOptions.map(o => o.text),
+        correctAnswer: newCorrectIndex
+      };
+    });
+  }
+
+  function renderPractice() {
+    const container = document.getElementById('quizContainer');
+    container.className = '';
+    container.innerHTML = '';
+
+    const totalPages = Math.ceil(practiceQuestions.length / questionsPerPage);
+    const startIndex = currentPracticePage * questionsPerPage;
+    const currentQuestions = practiceQuestions.slice(startIndex, startIndex + questionsPerPage);
+
+    currentQuestions.forEach((q) => {
+      const card = document.createElement('div');
+      const userAns = practiceAnswers[q.id];
+      const hasAnswered = userAns !== undefined;
+      const isCorrect = userAns === q.correctAnswer;
+
+      let cardClass = 'card';
+      if (hasAnswered) {
+        cardClass += isCorrect ? ' correct-card' : ' wrong-card';
+      }
+      card.className = cardClass;
+
+      let html = `<div class="q-title"><b>Câu ${q.id}:</b> ${q.question}</div>`;
+
+      q.options.forEach((opt, optIdx) => {
+        let optClass = 'option';
+
+        if (hasAnswered) {
+          if (optIdx === q.correctAnswer) {
+            optClass += ' correct-ans';
+          } else if (userAns === optIdx) {
+            optClass += ' incorrect-ans';
+          }
+        }
+
+        html += `<button class="${optClass}" onclick="selectPracticeOption(${q.id}, ${optIdx})">
+          <b>${String.fromCharCode(65 + optIdx)}.</b> ${opt}
+        </button>`;
+      });
+
+      if (hasAnswered) {
+        if (isCorrect) {
+          html += `<div class="correct-notice">
+            ✅ <b>CHÍNH XÁC!</b> Đáp án đúng là <b>${String.fromCharCode(65 + q.correctAnswer)}</b>.
+          </div>`;
+        } else {
+          html += `<div class="wrong-notice">
+            ❌ <b>SAI RỒI!</b> Bạn chọn <b>${String.fromCharCode(65 + userAns)}</b>. <br>
+            👉 Đáp án đúng là: <b>${String.fromCharCode(65 + q.correctAnswer)} (${q.options[q.correctAnswer]})</b>
+          </div>`;
+        }
+      }
+
+      card.innerHTML = html;
+      container.appendChild(card);
+    });
+
+    document.getElementById('prevBtn').disabled = currentPracticePage === 0;
+    document.getElementById('nextBtn').disabled = currentPracticePage >= totalPages - 1;
+    
+    // Cập nhật text hiển thị thành dạng: Câu 4 - 6
+    const startNum = startIndex + 1;
+    const endNum = Math.min(startIndex + questionsPerPage, practiceQuestions.length);
+    document.getElementById('pageInfo').innerText = `Câu ${startNum} - ${endNum}`;
+  }
+
+  function selectPracticeOption(qId, optionIdx) {
+    practiceAnswers[qId] = optionIdx;
+    renderPractice();
+  }
+
+  function changePracticePage(delta) {
+    currentPracticePage += delta;
+    renderPractice();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 </script>
 </body>
